@@ -106,3 +106,47 @@
     background-color: rgba(158, 158, 158, 0.5);
     z-index: 9998;
 }
+
+.card {
+    cursor: pointer;
+}
+
+@media only screen and (max-width: 1060px) {
+    .search-inputs {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .search-inputs div {
+        width: clamp(300px, 50%, 800px); /* минимальная ширина 300px, идеальная ширина 50%, максимальная ширина 800px */
+    }
+
+    .search-inputs div:first-child {
+        margin: 0 0 20px 0!important;
+    }
+    #content {
+        width: 100%;
+        justify-content: space-between;
+    }
+    #content div{
+        width: 200px!important;
+    }
+}
+
+@media only screen and (max-width: 1060px) {
+    #content {
+        justify-content: space-evenly;
+    }
+}
+
+@media only screen and (max-width: 450px) {
+    #content {
+        justify-content: center;
+    }
+
+    #content div{
+        width: 100% !important;
+    }
+}
+
