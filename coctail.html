@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js"></script>
+</head>
+<body>
+    <div class="stub" id="stub"></div>
+    <div id="preloader">
+        <div class="loader">Loading...</div>
+    </div>
+    <div class="container">
+        <h1 class="text-center mt-3 mb-4">Coctail search</h1>
+        <div class="row justify-content-center text-center">
+            <div class="col-5 me-5">
+                <h3>Coctail name search</h3>
+                <form id="searchCoctailByName" class="d-flex">
+                    <input type="text" id="nameCoctail" class="form-control me-3" required>
+                    <button type="submit" class="btn btn-primary">Search!</button>
+                </form>
+            </div>
+            <div class="col-5">
+                <h3>Coctail ingredient search</h3>
+                <form id="searchCoctailByIngredient" class="d-flex">
+                    <input type="text" id="ingredientInput" class="form-control me-3" required>
+                    <button type="submit" class="btn btn-primary">Search!</button>
+                </form>
+            </div>
+        </div>
+        <div id="content" class="row row-cols-5"></div>
+        <div class="modal fade" id="infoCoctail" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="modalLabel"></h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modalBody">
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="info-ingredient" id="infoIngredient"></div>
+    </div>
+    <script>
+        const stub = document.getElementById('stub');
+        const searchByName = document.getElementById('searchCoctailByName');
+        const nameCoctail = document.getElementById('nameCoctail');
+        const searcByIngredient = document.getElementById('searchCoctailByIngredient');
+        const ingredientInput = document.getElementById('ingredientInput');
+        const content = document.getElementById('content');
+        const modalLabel = document.getElementById('modalLabel');
+        const modalBody = document.getElementById('modalBody');
+        const preloader = document.getElementById('preloader');
+        const infoIngredient = document.getElementById('infoIngredient');
+        
+
+        const showCoctail = async (link) => {
+            try {
+                preloader.style.display = 'block';
+                const coctailResponse = await main(link);
+
+                for(let i = 0; i < coctailResponse.drinks.length; i++) {
+                    const coctail = coctailResponse.drinks[i];
+                    const coctailDiv = document.createElement('div');
+                    coctailDiv.classList.add('col', 'mb-3', 'mt-3');
+                    const coctailCard = document.createElement('div');
+                    coctailCard.classList.add('card', 'h-100');
+                    coctailCard.setAttribute('data-bs-toggle', 'modal');
+                    coctailCard.setAttribute('data-bs-target', '#infoCoctail');
+                    coctailCard.setAttribute('data-bs-whatever', '@mdo');
+                    const coctailImg = document.createElement('img');
+                    coctailImg.classList.add('card-img-top');
+                    coctailImg.setAttribute('src', coctail.strDrinkThumb);
+                    const cardBody = document.createElement('div');
+                    cardBody.classList.add('card-body');
+                    const coctailName = document.createElement('p');
+                    coctailName.classList.add('card-text');
+                    coctailName.innerHTML = coctail.strDrink;
+                    cardBody.append(coctailName);
+                    coctailCard.append(coctailImg, cardBody);
+                    coctailDiv.appendChild(coctailCard);
+                    content.appendChild(coctailDiv);
+
+                    coctailCard.addEventListener('click', async () => {
+                        try {
+                            modalBody.innerHTML = '';
+                            preloader.style.display = 'block';
+                            const searchId = await main(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${coctail.idDrink}`);
+                            const drink = searchId.drinks[0];
+                            modalLabel.innerHTML = drink.strDrink;
+                            const ingredientTitle = document.createElement('h4');
+                            ingredientTitle.innerHTML = 'Ingredients:';
+                            modalBody.append(ingredientTitle);
+                            for(let i = 1; i < 15; i++) {
+                                const nameIngredient = drink['strIngredient' + i];
+                                const measure = drink['strMeasure' + i];
+                                if(nameIngredient) {
+                                    const ingredients = document.createElement('div');
+                                    const ingredientImg = document.createElement('img');
+                                    ingredientImg.classList.add('border', 'border-black', 'm-2', 'pointer');
+                                    ingredientImg.setAttribute('src', `https://www.thecocktaildb.com/images/ingredients/${nameIngredient}-Small.png`);
+                                    ingredientImg.addEventListener('click', async () => {
+                                        try {
+                                            preloader.style.display = 'block';
+                                            const ingredientResponse = await main(`https://www.thecocktaildb.com/api/json/v1/1/search.php?i=${nameIngredient}`);
+                                            infoIngredient.innerHTML = '';
+                                            infoIngredient.style.display = 'block';
+                                            stub.style.display = 'block';
+                                            const infoIngredientTop = document.createElement('div');
+                                            infoIngredientTop.classList.add('d-flex', 'justify-content-between');
+                                            const infoIngredientTitle = document.createElement('h3');
+                                            infoIngredientTitle.innerHTML = nameIngredient;
+                                            const infoIngredientBtn = document.createElement('button');
+                                            infoIngredientBtn.classList.add('btn-close');
+                                            infoIngredientBtn.addEventListener('click', () => {
+                                                infoIngredient.style.display = 'none';
+                                                stub.style.display = 'none';
+                                            });
+                                            const infoIngredientText = document.createElement('p');
+                                            if(ingredientResponse.ingredients[0].strDescription !== null) {
+                                                infoIngredientText.innerHTML = ingredientResponse.ingredients[0].strDescription;
+                                            } else {
+                                                infoIngredientText.innerHTML = `Conventional ${nameIngredient}`;
+                                            }
+                                            
+                                            infoIngredientTop.append(infoIngredientTitle, infoIngredientBtn);
+                                            infoIngredient.append(infoIngredientTop, infoIngredientText);
+                                        } catch (e) {
+                                            alert('Извините произошла ошибка!');
+                                        } finally {
+                                            preloader.style.display = 'none';
+                                        }
+                                    })
+                                    const ingredientName = document.createElement('span');
+                                    ingredientName.innerHTML = nameIngredient;
+                                    ingredientName.classList.add('fw-bold');
+                                    ingredients.append(ingredientImg, ingredientName);
+                                    if(measure) {
+                                        const ingredientMeasure = document.createElement('span');
+                                        ingredientMeasure.innerHTML = ` (${measure})`;
+                                        ingredients.appendChild(ingredientMeasure);
+                                    }
+                                    modalBody.append(ingredients);
+                                }
+                            }
+                            const cupDrink = document.createElement('p');
+                            cupDrink.innerHTML = `<strong>Used mug:</strong> ${drink.strGlass}`;
+                            const alcohol = document.createElement('p');
+                            alcohol.innerHTML = `<strong>Availability of alcohol:</strong> ${drink.strAlcoholic}`;
+                            const category = document.createElement('p');
+                            category.innerHTML = `<strong>Category:</strong> ${drink.strCategory}`;
+                            const instructionsTitle = document.createElement('h4');
+                            instructionsTitle.innerHTML = 'Instuctions: ';
+                            const instruction = document.createElement('p');
+                            instruction.innerHTML = drink.strInstructions;
+                            modalBody.append(cupDrink, alcohol, category, instructionsTitle, instruction);
+                        } catch (e) {
+                            alert('Извините произошла ошибка!');
+                        } finally {
+                            preloader.style.display = 'none';
+                        }
+                    });
+                }
+            } catch (e) {
+                alert('Извините произошла ошибка!');
+            } finally {
+                preloader.style.display = 'none';
+            }
+        }
+
+        searchByName.addEventListener('submit', (event) => {
+            event.preventDefault();
+            content.innerHTML = '';
+            showCoctail(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${nameCoctail.value}`);
+        });
+
+        searcByIngredient.addEventListener('submit', (event) => {
+            event.preventDefault();
+            content.innerHTML = '';
+            showCoctail(`https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=${ingredientInput.value}`);
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
